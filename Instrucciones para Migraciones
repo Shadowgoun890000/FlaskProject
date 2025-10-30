@@ -1,0 +1,52 @@
+Paso 1: Instalar Flask-Migrate
+bash
+
+pip install Flask-Migrate
+
+Paso 2: Modificar app.py para incluir Flask-Migrate
+
+Agrega las siguientes líneas en app.py:
+python
+
+from flask_migrate import Migrate
+
+# ... después de inicializar db y app ...
+
+migrate = Migrate(app, db)
+
+Paso 3: Inicializar el directorio de migraciones
+
+Ejecuta en la terminal:
+bash
+
+flask db init
+
+Esto creará un directorio migrations en tu proyecto.
+Paso 4: Crear la migración inicial
+
+Ejecuta:
+bash
+
+flask db migrate -m "Initial migration"
+
+Esto revisará los modelos y generará un script de migración en migrations/versions.
+Paso 5: Aplicar la migración
+
+Ejecuta:
+bash
+
+flask db upgrade
+
+Esto aplicará los cambios a la base de datos.
+Paso 6: Para futuros cambios en los modelos
+
+Siempre que modifiques tus modelos, ejecuta:
+bash
+
+flask db migrate -m "Descripción del cambio"
+flask db upgrade
+
+Nota: Si ya tienes datos en la base de datos y no quieres perderlos, asegúrate de que las migraciones se generen correctamente. Flask-Migrate intentará generar migraciones que mantengan los datos, pero es importante revisar el script de migración generado.
+Paso 7: Inicializar el administrador por defecto
+
+Ahora, para crear el administrador por defecto, puedes ejecutar el script que te proporcioné anteriormente o hacerlo manualmente a través de la consola.

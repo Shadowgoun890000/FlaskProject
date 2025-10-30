@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Turnos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>📊 Dashboard Administrativo</h1>
+                <p>Bienvenido, {{ admin_username }}</p>
+            </div>
+            <div>
+                <a href="{{ url_for('logout') }}" class="btn btn-warning">🚪 Cerrar Sesión</a>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">🌐 Vista Pública</a>
+            </div>
+        </header>
+
+        <!-- Menú de Navegación -->
+        <nav class="nav-menu" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 2rem;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="#estadisticas" class="btn btn-primary">📈 Estadísticas</a>
+                <a href="#turnos" class="btn btn-primary">📋 Gestión de Turnos</a>
+                <a href="#busqueda" class="btn btn-primary">🔍 Búsqueda</a>
+                <a href="#catalogos" class="btn btn-primary">📚 Catálogos</a>
+            </div>
+        </nav>
+
+        <!-- Estadísticas -->
+        <section id="estadisticas" class="dashboard-section">
+            <h2>📈 Estadísticas de Turnos</h2>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+                    <h3>Total Turnos</h3>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{{ stats.total_turnos }}</div>
+                </div>
+                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+                    <h3>Pendientes</h3>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">{{ stats.pendientes }}</div>
+                </div>
+                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+                    <h3>Resueltos</h3>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ stats.resueltos }}</div>
+                </div>
+                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+                    <h3>Por Municipio</h3>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ stats.total_municipios }}</div>
+                </div>
+            </div>
+
+            <!-- Gráficas -->
+            <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+                    <h4>Estatus de Turnos</h4>
+                    <canvas id="estatusChart"></canvas>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+                    <h4>Turnos por Municipio</h4>
+                    <canvas id="municipiosChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gestión de Turnos -->
+        <section id="turnos" class="dashboard-section" style="margin-top: 3rem;">
+            <h2>📋 Gestión de Turnos</h2>
+            <div class="filters" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <select id="filterEstado" class="form-control">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="atendido">Atendido</option>
+                        <option value="resuelto">Resuelto</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                    <select id="filterMunicipio" class="form-control">
+                        <option value="">Todos los municipios</option>
+                        {% for municipio in municipios %}
+                        <option value="{{ municipio }}">{{ municipio }}</option>
+                        {% endfor %}
+                    </select>
+                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+
+            <div id="turnosList" class="turnos-list">
+                <!-- Los turnos se cargarán aquí via JavaScript -->
+            </div>
+        </section>
+
+        <!-- Búsqueda -->
+        <section id="busqueda" class="dashboard-section" style="margin-top: 3rem;">
+            <h2>🔍 Búsqueda Avanzada</h2>
+            <div class="search-forms" style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="searchCURP">Buscar por CURP</label>
+                        <input type="text" id="searchCURP" class="form-control" placeholder="Ingresa la CURP">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchNombre">Buscar por Nombre</label>
+                        <input type="text" id="searchNombre" class="form-control" placeholder="Ingresa el nombre">
+                    </div>
+                </div>
+                <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+
+                <div id="searchResults" style="margin-top: 1rem;">
+                    <!-- Resultados de búsqueda -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

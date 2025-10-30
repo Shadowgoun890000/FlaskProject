@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Turnos - Educación</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎓 Sistema de Turnos Educativos</h1>
+            <p>Genera tu turno para trámites y servicios educativos</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Formulario -->
+            <div class="form-container">
+                <form id="turnoForm" novalidate>
+                    <h2>Datos Personales</h2>
+
+                    <div class="form-group">
+                        <label for="nombreCompleto">Nombre Completo *</label>
+                        <input type="text" id="nombreCompleto" name="nombreCompleto" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="curp">CURP *</label>
+                        <input type="text" id="curp" name="curp" class="form-control" placeholder="AAAA000000HHMMMM00" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre">Nombre(s) *</label>
+                            <input type="text" id="nombre" name="nombre" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="paterno">Apellido Paterno *</label>
+                            <input type="text" id="paterno" name="paterno" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="materno">Apellido Materno</label>
+                        <input type="text" id="materno" name="materno" class="form-control">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="telefono">Teléfono Fijo</label>
+                            <input type="tel" id="telefono" name="telefono" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="celular">Celular *</label>
+                            <input type="tel" id="celular" name="celular" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="correo">Correo Electrónico *</label>
+                        <input type="email" id="correo" name="correo" class="form-control" required>
+                    </div>
+
+                    <h2>Información Académica</h2>
+
+                    <div class="form-group">
+                        <label for="nivel">Nivel Educativo *</label>
+                        <select id="nivel" name="nivel" class="form-control" required>
+                            <option value="">Selecciona un nivel</option>
+                            <option value="preescolar">Preescolar</option>
+                            <option value="primaria">Primaria</option>
+                            <option value="secundaria">Secundaria</option>
+                            <option value="bachillerato">Bachillerato</option>
+                            <option value="licenciatura">Licenciatura</option>
+                            <option value="posgrado">Posgrado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="municipio">Municipio *</label>
+                        <select id="municipio" name="municipio" class="form-control" required>
+                            <option value="">Selecciona un municipio</option>
+                            <option value="aguascalientes">Aguascalientes</option>
+                            <option value="zacatecas">Zacatecas</option>
+                            <option value="jalisco">Jalisco</option>
+                            <option value="guanajuato">Guanajuato</option>
+                            <option value="san-luis-potosi">San Luis Potosí</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="asunto">Asunto *</label>
+                        <select id="asunto" name="asunto" class="form-control" required>
+                            <option value="">Selecciona un asunto</option>
+                            <option value="inscripcion">Inscripción</option>
+                            <option value="reinscripcion">Reinscripción</option>
+                            <option value="certificacion">Certificación</option>
+                            <option value="tramite-documentos">Trámite de documentos</option>
+                            <option value="informacion">Información general</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Generar Turno
+                    </button>
+                </form>
+            </div>
+
+            <!-- Panel de información -->
+            <div class="info-panel">
+                <h3>📋 Información del Turno</h3>
+
+                <div id="turnoInitial">
+                    <div class="turno-info">
+                        <p>Complete el formulario para generar su turno</p>
+                    </div>
+                </div>
+
+                <div id="turnoSuccess" class="hidden">
+                    <div class="turno-info">
+                        <h4>¡Turno Generado!</h4>
+                        <div class="turno-numero" id="turnoNumero">T-123456</div>
+                        <p>Fecha: <span id="fechaGeneracion"></span></p>
+                        <a href="#" id="pdfDownload" class="btn btn-success btn-block mt-3">
+                            📄 Descargar Comprobante
+                        </a>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h4>💡 Instrucciones</h4>
+                    <ul>
+                        <li>Llega 15 minutos antes de tu cita</li>
+                        <li>Trae identificación oficial</li>
+                        <li>Presenta este comprobante</li>
+                        <li>Conserva tu número de turno</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>✅ Turno Generado Exitosamente</h2>
+            <p>Tu turno ha sido registrado en el sistema. Puedes descargar tu comprobante en el panel lateral.</p>
+            <p><strong>Recuerda:</strong> Guarda tu número de turno para cualquier consulta.</p>
+            <button onclick="app.closeModal()" class="btn btn-primary btn-block mt-3">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

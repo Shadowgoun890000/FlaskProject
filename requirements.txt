@@ -1,0 +1,8 @@
+werkzeug
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+marshmallow==3.20.1
+marshmallow-sqlalchemy==0.29.0
+mysql-connector-python==8.1.0
+fpdf2==2.7.4
+SQLAlchemy==2.0.23
