@@ -1,211 +1,234 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de Turnos</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - Sistema de Turnos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h1>📊 Dashboard Administrativo</h1>
-                <p>Bienvenido, {{ admin_username }}</p>
-            </div>
-            <div>
-                <a href="{{ url_for('logout') }}" class="btn btn-warning">🚪 Cerrar Sesión</a>
-                <a href="{{ url_for('index') }}" class="btn btn-secondary">🌐 Vista Pública</a>
-            </div>
-        </header>
+  <div class="container">
+    <!-- Header -->
+    <header class="header" aria-label="Barra superior">
+      <div>
+        <h1 style="margin:0;">📊 Dashboard Administrativo</h1>
+        <p class="help-text" style="margin:0;">Bienvenido, {{ admin_username }}</p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="themeToggle" class="btn theme-toggle" type="button" title="Cambiar tema">🌓</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary" aria-label="Ir a vista pública">🌐 Vista Pública</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-warning" aria-label="Cerrar sesión">🚪 Cerrar Sesión</a>
+      </div>
+    </header>
 
-        <!-- Menú de Navegación -->
-        <nav class="nav-menu" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 2rem;">
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <a href="#estadisticas" class="btn btn-primary">📈 Estadísticas</a>
-                <a href="#turnos" class="btn btn-primary">📋 Gestión de Turnos</a>
-                <a href="#busqueda" class="btn btn-primary">🔍 Búsqueda</a>
-                <a href="#catalogos" class="btn btn-primary">📚 Catálogos</a>
-            </div>
-        </nav>
+    <script>
+        // === Cambio de tema (oscuro / claro) ===
+        const themeToggle = document.getElementById('themeToggle');
+        const root = document.documentElement;
+        const key = 'theme';
 
-        <!-- Estadísticas -->
-        <section id="estadisticas" class="dashboard-section">
-            <h2>📈 Estadísticas de Turnos</h2>
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Total Turnos</h3>
-                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{{ stats.total_turnos }}</div>
-                </div>
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Pendientes</h3>
-                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">{{ stats.pendientes }}</div>
-                </div>
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Resueltos</h3>
-                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ stats.resueltos }}</div>
-                </div>
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Por Municipio</h3>
-                    <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ stats.total_municipios }}</div>
-                </div>
-            </div>
+        // Detectar preferencia del sistema o la guardada
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem(key);
 
-            <!-- Gráficas -->
-            <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-                    <h4>Estatus de Turnos</h4>
-                    <canvas id="estatusChart"></canvas>
-                </div>
-                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-                    <h4>Turnos por Municipio</h4>
-                    <canvas id="municipiosChart"></canvas>
-                </div>
-            </div>
-        </section>
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            root.classList.add('dark');
+        }
 
-        <!-- Gestión de Turnos -->
-        <section id="turnos" class="dashboard-section" style="margin-top: 3rem;">
-            <h2>📋 Gestión de Turnos</h2>
-            <div class="filters" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <select id="filterEstado" class="form-control">
-                        <option value="">Todos los estados</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="atendido">Atendido</option>
-                        <option value="resuelto">Resuelto</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
-                    <select id="filterMunicipio" class="form-control">
-                        <option value="">Todos los municipios</option>
-                        {% for municipio in municipios %}
-                        <option value="{{ municipio }}">{{ municipio }}</option>
-                        {% endfor %}
-                    </select>
-                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
-                </div>
-            </div>
+        // Alternar tema
+        themeToggle?.addEventListener('click', () => {
+            const isDark = root.classList.toggle('dark');
+            localStorage.setItem(key, isDark ? 'dark' : 'light');
+    });
+    </script>
 
-            <div id="turnosList" class="turnos-list">
-                <!-- Los turnos se cargarán aquí via JavaScript -->
-            </div>
-        </section>
 
-    <section id="gestion-codigos" class="dashboard-section" style="margin-top: 3rem;">
-    <h2>🔑 Gestión de Códigos de Registro</h2>
-    <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+    <!-- Menú de Navegación -->
+    <nav class="nav-menu" aria-label="Navegación principal" style="margin-bottom: 20px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="#estadisticas" class="btn btn-primary">📈 Estadísticas</a>
+        <a href="#turnos" class="btn btn-primary">📋 Gestión de Turnos</a>
+        <a href="#busqueda" class="btn btn-primary">🔍 Búsqueda</a>
+        <a href="#gestion-codigos" class="btn btn-primary">🔑 Códigos</a>
+      </div>
+    </nav>
+
+    <!-- Estadísticas -->
+    <section id="estadisticas" class="section" aria-labelledby="title-estadisticas">
+      <h2 id="title-estadisticas">📈 Estadísticas de Turnos</h2>
+
+      <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px;">
+        <div class="stat-card">
+          <h3 style="margin:0 0 6px 0;">Total Turnos</h3>
+          <div class="stat-number">{{ stats.total_turnos }}</div>
+        </div>
+        <div class="stat-card">
+          <h3 style="margin:0 0 6px 0;">Pendientes</h3>
+          <div class="stat-number">{{ stats.pendientes }}</div>
+        </div>
+        <div class="stat-card">
+          <h3 style="margin:0 0 6px 0;">Resueltos</h3>
+          <div class="stat-number">{{ stats.resueltos }}</div>
+        </div>
+        <div class="stat-card">
+          <h3 style="margin:0 0 6px 0;">Por Municipio</h3>
+          <div class="stat-number">{{ stats.total_municipios }}</div>
+        </div>
+      </div>
+
+      <div class="charts-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
+        <div class="card" style="padding:16px;">
+          <h4 style="margin:0 0 10px 0;">Estatus de Turnos</h4>
+          <canvas id="estatusChart" role="img" aria-label="Gráfica de estatus de turnos"></canvas>
+        </div>
+        <div class="card" style="padding:16px;">
+          <h4 style="margin:0 0 10px 0;">Turnos por Municipio</h4>
+          <canvas id="municipiosChart" role="img" aria-label="Gráfica de turnos por municipio"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gestión de Turnos -->
+    <section id="turnos" class="section" aria-labelledby="title-gestion" style="margin-top:20px;">
+      <h2 id="title-gestion">📋 Gestión de Turnos</h2>
+
+      <div class="panel" style="padding:12px; margin:12px 0;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <label for="filterEstado" class="help-text" style="min-width:140px;">Estado:</label>
+          <select id="filterEstado" class="form-control" aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="atendido">Atendido</option>
+            <option value="resuelto">Resuelto</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+
+          <label for="filterMunicipio" class="help-text" style="min-width:140px;">Municipio:</label>
+          <select id="filterMunicipio" class="form-control" aria-label="Filtrar por municipio">
+            <option value="">Todos los municipios</option>
+            {% for municipio in municipios %}
+            <option value="{{ municipio }}">{{ municipio }}</option>
+            {% endfor %}
+          </select>
+
+          <button id="btnFiltrar" class="btn btn-primary" type="button">Filtrar</button>
+        </div>
+      </div>
+
+      <div id="turnosList" class="turnos-list" aria-live="polite" aria-busy="false">
+        <!-- Render de turnos por dashboard.js -->
+      </div>
+    </section>
+
+    <!-- Gestión de Códigos de Registro -->
+    <section id="gestion-codigos" class="section" aria-labelledby="title-codigos" style="margin-top:20px;">
+      <h2 id="title-codigos">🔑 Gestión de Códigos de Registro</h2>
+
+      <div class="panel" style="padding:16px; margin-top:10px;">
         <div class="form-row">
-            <div class="form-group">
-                <button id="btnGenerarCodigo" class="btn btn-success">
-                    🎫 Generar Código de Registro
-                </button>
-            </div>
-            <div class="form-group">
-                <button id="btnVerCodigos" class="btn btn-info">
-                    📋 Ver Códigos Activos
-                </button>
-            </div>
+          <div class="form-group">
+            <button id="btnGenerarCodigo" class="btn btn-success" type="button">🎫 Generar Código</button>
+          </div>
+          <div class="form-group">
+            <button id="btnVerCodigos" class="btn btn-secondary" type="button">📋 Ver Códigos Activos</button>
+          </div>
         </div>
 
-        <div id="codigosResult" style="margin-top: 1rem;"></div>
-    </div>
-</section>
+        <div id="codigosResult" style="margin-top: 10px;" aria-live="polite"></div>
+      </div>
+    </section>
 
-        <!-- Búsqueda -->
-        <section id="busqueda" class="dashboard-section" style="margin-top: 3rem;">
-            <h2>🔍 Búsqueda Avanzada</h2>
-            <div class="search-forms" style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="searchCURP">Buscar por CURP</label>
-                        <input type="text" id="searchCURP" class="form-control" placeholder="Ingresa la CURP">
-                    </div>
-                    <div class="form-group">
-                        <label for="searchNombre">Buscar por Nombre</label>
-                        <input type="text" id="searchNombre" class="form-control" placeholder="Ingresa el nombre">
-                    </div>
-                </div>
-                <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+    <!-- Búsqueda -->
+    <section id="busqueda" class="section" aria-labelledby="title-busqueda" style="margin-top:20px;">
+      <h2 id="title-busqueda">🔍 Búsqueda Avanzada</h2>
 
-                <div id="searchResults" style="margin-top: 1rem;">
-                    <!-- Resultados de búsqueda -->
-                </div>
-            </div>
-        </section>
-    </div>
+      <div class="panel" style="padding:16px; margin-top:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="searchCURP">Buscar por CURP</label>
+            <input type="text" id="searchCURP" class="form-control" placeholder="Ingresa la CURP" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="searchNombre">Buscar por Nombre</label>
+            <input type="text" id="searchNombre" class="form-control" placeholder="Ingresa el nombre" autocomplete="off">
+          </div>
+        </div>
+        <button id="btnBuscar" class="btn btn-primary" type="button">Buscar</button>
 
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-</body>
-</html>
+        <div id="searchResults" style="margin-top: 12px;" aria-live="polite">
+          <!-- Resultados de búsqueda -->
+        </div>
+      </div>
+    </section>
+  </div>
 
-// Gestión de códigos de registro
-document.getElementById('btnGenerarCodigo').addEventListener('click', generarCodigoRegistro);
-document.getElementById('btnVerCodigos').addEventListener('click', verCodigosActivos);
+  <!-- Tu lógica principal del dashboard -->
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
-async function generarCodigoRegistro() {
-    try {
+  <!-- Gestión de códigos (mantenido aquí para no tocar dashboard.js) -->
+  <script>
+    // Botones de gestión
+    const btnGenerar = document.getElementById('btnGenerarCodigo');
+    const btnVer = document.getElementById('btnVerCodigos');
+    const resultBox = document.getElementById('codigosResult');
+
+    if (btnGenerar) btnGenerar.addEventListener('click', generarCodigoRegistro);
+    if (btnVer) btnVer.addEventListener('click', verCodigosActivos);
+
+    async function generarCodigoRegistro() {
+      try {
+        resultBox.innerHTML = '<div class="alert alert-info">Generando código...</div>';
         const response = await fetch('/admin/generate-code');
         const result = await response.json();
 
         if (result.success) {
-            document.getElementById('codigosResult').innerHTML = `
-                <div class="success-message">
-                    <strong>✅ ${result.message}</strong><br>
-                    <code style="font-size: 1.2rem; background: #f8f9fa; padding: 10px; display: block; margin: 10px 0;">
-                        ${result.code}
-                    </code>
-                    <p>Comparte este código con quien necesite registrarse. Válido por 24 horas.</p>
-                </div>
-            `;
+          resultBox.innerHTML = `
+            <div class="alert alert-success">
+              <strong>✅ ${result.message}</strong>
+              <div class="card" style="padding:10px; margin-top:8px;">
+                <code style="font-size:1.15rem; display:block;">${result.code}</code>
+              </div>
+              <p class="help-text" style="margin-top:6px;">Comparte este código con quien necesite registrarse. Válido por 24 horas.</p>
+            </div>`;
         } else {
-            document.getElementById('codigosResult').innerHTML = `
-                <div class="error-message">❌ Error: ${result.error}</div>
-            `;
+          resultBox.innerHTML = `<div class="alert alert-error">❌ Error: ${result.error || 'No se pudo generar el código'}</div>`;
         }
-    } catch (error) {
-        document.getElementById('codigosResult').innerHTML = `
-            <div class="error-message">❌ Error de conexión</div>
-        `;
+      } catch (e) {
+        resultBox.innerHTML = `<div class="alert alert-error">❌ Error de conexión</div>`;
+      }
     }
-}
 
-async function verCodigosActivos() {
-    try {
+    async function verCodigosActivos() {
+      try {
+        resultBox.innerHTML = '<div class="alert alert-info">Consultando códigos...</div>';
         const response = await fetch('/admin/active-codes');
         const result = await response.json();
 
         if (result.success) {
-            if (result.active_codes === 0) {
-                document.getElementById('codigosResult').innerHTML = `
-                    <div class="info-message">No hay códigos activos</div>
-                `;
-            } else {
-                let html = `<div class="success-message"><strong>📋 Códigos Activos: ${result.active_codes}</strong><br>`;
-
-                for (const [code, data] of Object.entries(result.codes)) {
-                    const expires = new Date(data.expires_at).toLocaleString();
-                    html += `
-                        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                            <strong>Código:</strong> <code>${code}</code><br>
-                            <strong>Expira:</strong> ${expires}<br>
-                            <strong>Usos restantes:</strong> ${data.max_uses}
-                        </div>
-                    `;
-                }
-
-                html += `</div>`;
-                document.getElementById('codigosResult').innerHTML = html;
+          if (result.active_codes === 0) {
+            resultBox.innerHTML = `<div class="alert alert-info">No hay códigos activos</div>`;
+          } else {
+            let html = `<div class="card" style="padding:12px;"><strong>📋 Códigos Activos: ${result.active_codes}</strong>`;
+            for (const [code, data] of Object.entries(result.codes)) {
+              const expires = new Date(data.expires_at).toLocaleString();
+              html += `
+                <div class="panel" style="padding:10px; margin-top:10px;">
+                  <div><strong>Código:</strong> <code>${code}</code></div>
+                  <div><strong>Expira:</strong> ${expires}</div>
+                  <div><strong>Usos restantes:</strong> ${data.max_uses}</div>
+                </div>`;
             }
+            html += `</div>`;
+            resultBox.innerHTML = html;
+          }
         } else {
-            document.getElementById('codigosResult').innerHTML = `
-                <div class="error-message">❌ Error: ${result.error}</div>
-            `;
+          resultBox.innerHTML = `<div class="alert alert-error">❌ Error: ${result.error || 'No se pudieron obtener los códigos'}</div>`;
         }
-    } catch (error) {
-        document.getElementById('codigosResult').innerHTML = `
-            <div class="error-message">❌ Error de conexión</div>
-        `;
+      } catch (e) {
+        resultBox.innerHTML = `<div class="alert alert-error">❌ Error de conexión</div>`;
+      }
     }
-}
+  </script>
+</body>
+</html>

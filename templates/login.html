@@ -1,128 +1,169 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema de Turnos</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .login-card {
-            background: white;
-            padding: 2rem;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            width: 100%;
-            max-width: 400px;
-        }
-        .captcha-container {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: var(--border-radius);
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .captcha-text {
-            font-family: 'Courier New', monospace;
-            font-size: 1.5rem;
-            font-weight: bold;
-            letter-spacing: 3px;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-        .public-access {
-            text-align: center;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Sistema de Turnos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .login-container{
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      padding:16px;
+    }
+    .login-card{
+      background:var(--surface, #fff);
+      padding:2rem;border-radius:var(--border-radius, 12px);
+      box-shadow:var(--shadow, 0 8px 24px rgba(0,0,0,.12));
+      width:100%;max-width:420px;
+    }
+    .captcha-container{
+      background:var(--surface-2, #f8f9fa);
+      padding:1rem;border-radius:var(--border-radius, 12px);
+      text-align:center;margin-bottom:1rem; border:1px solid var(--muted, #e5e7eb);
+    }
+    .captcha-text{
+      font-family:'Courier New', monospace;font-size:1.5rem;font-weight:800;
+      letter-spacing:3px;color:var(--primary-color, #2563eb);margin-bottom:.5rem;
+      user-select:none; cursor:pointer;
+    }
+    .public-access{ text-align:center;margin-top:1rem;padding-top:1rem;border-top:1px solid #eee; }
+  </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="header text-center">
-                <h1>🔐 Acceso Administrativo</h1>
-                <p>Sistema de Gestión de Turnos</p>
+    <button id="themeToggle" class="btn theme-toggle" type="button" title="Cambiar tema"
+        style="position: fixed; top: 16px; right: 16px; z-index: 1000;">🌓</button>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="header" style="display:block;text-align:center;margin-bottom:12px;">
+        <h1 style="margin:0 0 6px 0;">🔐 Acceso</h1>
+        <p class="help-text" style="margin:0;">Inicia sesión como <strong>administrador</strong> o <strong>usuario</strong></p>
+      </div>
+
+      <!-- Mensajes flash -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert {{ 'alert-error' if category == 'error' else 'alert-info' }}">
+              {{ message }}
             </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-            <!-- Mostrar mensajes flash -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}"
-                             style="background: {% if category == 'error' %}#f8d7da{% else %}#d1ecf1{% endif %};
-                                    color: {% if category == 'error' %}#721c24{% else %}#0c5460{% endif %};
-                                    padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <form id="loginForm" method="POST" action="{{ url_for('login') }}">
-                <div class="form-group">
-                    <label for="username">Usuario</label>
-                    <input type="text" id="username" name="username" class="form-control" required
-                           placeholder="Ingresa tu usuario">
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password" class="form-control" required
-                           placeholder="Ingresa tu contraseña">
-                </div>
-
-                <div class="captcha-container">
-                    <div class="captcha-text" id="captchaText">{{ captcha_text }}</div>
-                    <input type="hidden" name="captcha_answer" value="{{ captcha_answer }}">
-                    <div class="form-group">
-                        <label for="captcha_input">Ingresa el texto de arriba</label>
-                        <input type="text" id="captcha_input" name="captcha_input" class="form-control" required
-                               placeholder="Escribe el código CAPTCHA">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
-            </form>
-
-            <div class="public-access">
-                <p>¿Eres usuario público?</p>
-                <a href="{{ url_for('publico') }}" class="btn btn-secondary btn-block">
-                    🌐 Ir al Formulario Público
-                </a>
-            </div>
-
-            <!-- Credenciales de prueba (solo en desarrollo) -->
-            {% if config.DEBUG %}
-            <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 4px; font-size: 0.9rem;">
-                <strong>Credenciales de prueba:</strong><br>
-                Usuario: <code>admin</code><br>
-                Contraseña: <code>admin123</code>
-            </div>
-            {% endif %}
+      <form id="loginForm" method="POST" action="{{ url_for('login') }}" novalidate>
+        <div class="form-group">
+          <label for="username">Usuario o correo</label>
+          <input
+            type="text" id="username" name="username" class="form-control" required
+            placeholder="Ingresa tu usuario o correo"
+            autocomplete="username"
+          >
         </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <div style="position:relative;">
+            <input
+              type="password" id="password" name="password" class="form-control" required
+              placeholder="Ingresa tu contraseña" autocomplete="current-password"
+            >
+            <button type="button" id="togglePwd"
+              aria-label="Mostrar u ocultar contraseña"
+              class="btn btn-secondary"
+              style="position:absolute; right:6px; top:6px; padding:8px 10px;">
+              👁
+            </button>
+          </div>
+        </div>
+
+        <div class="alert alert-info" role="status" aria-live="polite" style="margin-bottom:12px;">
+          Da clic en el código para recargar otro CAPTCHA si no se entiende.
+        </div>
+
+        <div class="captcha-container">
+          <div class="captcha-text" id="captchaText" title="Clic para recargar">{{ captcha_text }}</div>
+          <input type="hidden" name="captcha_answer" value="{{ captcha_answer }}">
+          <div class="form-group" style="margin-top:10px;">
+            <label for="captcha_input">Ingresa el texto de arriba</label>
+            <input type="text" id="captcha_input" name="captcha_input" class="form-control" required
+                   placeholder="Escribe el código CAPTCHA" inputmode="latin" autocomplete="off">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+      </form>
+
+      <div class="public-access">
+        <p>¿Eres usuario público?</p>
+        <a href="{{ url_for('publico') }}" class="btn btn-secondary btn-block">🌐 Ir al Formulario Público</a>
+
+        <!-- (Opcional) Si ya tienes /user/register, muestra el link de alta de usuarios -->
+        {% if url_for('register_user', _anchor=None) %}
+          <div style="margin-top:8px;">
+            <a href="{{ url_for('register_user') }}" class="btn btn-outline btn-block">📝 Crear cuenta de usuario</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Credenciales de prueba (solo en desarrollo) -->
+      {% if config.DEBUG %}
+        <div class="alert alert-info" style="margin-top:12px; font-size:.95rem;">
+          <strong>Credenciales de prueba:</strong><br>
+          Admin → Usuario: <code>admin</code> &nbsp; | &nbsp; Contraseña: <code>admin123</code>
+        </div>
+      {% endif %}
     </div>
+  </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<div class="spinner"></div> Verificando...';
-        });
+  <script>
+    // Spinner y bloqueo al enviar
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      const submitBtn = this.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="spinner"></div> Verificando...';
+    });
 
-        // Recargar CAPTCHA si es difícil de leer
-        document.getElementById('captchaText').addEventListener('click', function() {
-            // En una implementación real, harías una petición para regenerar el CAPTCHA
-            alert('Recargando página para nuevo CAPTCHA...');
-            location.reload();
-        });
+    // Toggle mostrar/ocultar contraseña
+    (function(){
+      const btn = document.getElementById('togglePwd');
+      const input = document.getElementById('password');
+      if(!btn || !input) return;
+      btn.addEventListener('click', function(){
+        const isPwd = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPwd ? 'text' : 'password');
+        btn.textContent = isPwd ? '🙈' : '👁';
+      });
+    })();
+
+    // Recargar CAPTCHA
+    document.getElementById('captchaText').addEventListener('click', function() {
+      // En tu implementación real puedes hacer fetch a /captcha para regenerar;
+      // por ahora recargamos la página (tu flujo actual).
+      location.reload();
+    });
+
+  </script>
+  <script>
+    // === Cambio de tema (oscuro / claro) ===
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    const key = 'theme';
+
+    // Detectar preferencia del sistema o la guardada
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem(key);
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        root.classList.add('dark');
+    }
+
+    // Alternar tema
+    themeToggle?.addEventListener('click', () => {
+        const isDark = root.classList.toggle('dark');
+        localStorage.setItem(key, isDark ? 'dark' : 'light');
+    });
     </script>
+
 </body>
 </html>

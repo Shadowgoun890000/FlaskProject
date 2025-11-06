@@ -57,6 +57,7 @@
             <div>
                 <strong>👤 Sesión activa:</strong> {{ admin_username }}
             </div>
+            <button id="themeToggle" class="btn theme-toggle" type="button" title="Cambiar tema">🌓</button>
             <div class="session-buttons">
                 <a href="{{ url_for('dashboard') }}" class="btn-dashboard">
                     📊 Dashboard
@@ -214,5 +215,22 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+    // === Cambio de tema (oscuro / claro) ===
+    const themeToggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+    const key = 'theme';
+
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem(key);
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        root.classList.add('dark');
+    }
+
+    themeToggle?.addEventListener('click', () => {
+        const isDark = root.classList.toggle('dark');
+        localStorage.setItem(key, isDark ? 'dark' : 'light');
+    });
+    </script>
 </body>
 </html>

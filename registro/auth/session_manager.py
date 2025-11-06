@@ -14,6 +14,15 @@ class SessionManager:
             cls._instance = super(SessionManager, cls).__new__(cls)
         return cls._instance
 
+    def login_user(self, user_id, username):
+        session['user_id'] = user_id
+        session['user_username'] = username
+        session['logged_in'] = True
+
+    def logout_user(self):
+        for k in ['user_id', 'user_username', 'user_logged_in']:
+            session.pop(k, None)
+
     def login_admin(self, admin_id, username):
         session['admin_id'] = admin_id
         session['admin_username'] = username
