@@ -39,6 +39,12 @@
     .dashboard-section[aria-hidden="true"] {
       display: none;
     }
+
+    /* Estilos ligeros para el mini-menú de catálogos */
+    .catalog-menu {
+      display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .catalog-menu .tabs-btn { padding: 10px 14px; font-size: 15px; }
   </style>
 </head>
 
@@ -61,7 +67,7 @@
         <button class="tabs-btn" role="tab" id="tab-estadisticas" aria-controls="estadisticas" aria-selected="true">📈 Estadísticas</button>
         <button class="tabs-btn" role="tab" id="tab-turnos" aria-controls="turnos" aria-selected="false">📋 Gestión de Turnos</button>
         <button class="tabs-btn" role="tab" id="tab-gestion-codigos" aria-controls="gestion-codigos" aria-selected="false">🔑 Códigos</button>
-          <button class="tabs-btn" role="tab" id="tab-catalogos" aria-controls="catalogos" aria-selected="false">📚 Catálogos</button>
+        <button class="tabs-btn" role="tab" id="tab-catalogos" aria-controls="catalogos" aria-selected="false">📚 Catálogos</button>
         <button class="tabs-btn" role="tab" id="tab-busqueda" aria-controls="busqueda" aria-selected="false">🔍 Búsqueda</button>
       </div>
     </nav>
@@ -160,128 +166,179 @@
       </div>
     </section>
 
-  <section id="catalogos" class="dashboard-section" role="tabpanel" aria-labelledby="tab-catalogos" aria-hidden="true" tabindex="0">
-  <h2>📚 Catálogos</h2>
+    <!-- ===================== SECCIÓN: CATÁLOGOS (MODIFICADA) ===================== -->
+    <section id="catalogos" class="dashboard-section" role="tabpanel" aria-labelledby="tab-catalogos" aria-hidden="true" tabindex="0">
+      <h2>📚 Catálogos</h2>
 
-  <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;">
-    <!-- Niveles -->
-    <div class="card" style="background:white;padding:1rem;border-radius:var(--border-radius);">
-      <h3>Niveles</h3>
-      <form id="formNivel" class="form-row" style="margin-bottom: .5rem;">
-        <input type="text" class="form-control" placeholder="Clave (ej: preescolar)" id="nivelClave" required>
-        <input type="text" class="form-control" placeholder="Nombre (ej: Preescolar)" id="nivelNombre" required>
-        <button type="submit" class="btn btn-success">Agregar</button>
-      </form>
-      <div id="tablaNiveles"></div>
-    </div>
+      <!-- Menú de selección de catálogo -->
+      <div class="catalog-menu" role="tablist" aria-label="Seleccionar catálogo">
+        <button class="tabs-btn" role="tab" id="cat-niveles" aria-controls="panel-catalogo" data-target="niveles" aria-selected="true">Niveles</button>
+        <button class="tabs-btn" role="tab" id="cat-municipios" aria-controls="panel-catalogo" data-target="municipios" aria-selected="false">Municipios</button>
+        <button class="tabs-btn" role="tab" id="cat-asuntos" aria-controls="panel-catalogo" data-target="asuntos" aria-selected="false">Asuntos</button>
+      </div>
 
-    <!-- Municipios -->
-    <div class="card" style="background:white;padding:1rem;border-radius:var(--border-radius);">
-      <h3>Municipios</h3>
-      <form id="formMunicipio" class="form-row" style="margin-bottom: .5rem;">
-        <input type="text" class="form-control" placeholder="Clave (ej: aguascalientes)" id="munClave" required>
-        <input type="text" class="form-control" placeholder="Nombre (ej: Aguascalientes)" id="munNombre" required>
-        <button type="submit" class="btn btn-success">Agregar</button>
-      </form>
-      <div id="tablaMunicipios"></div>
-    </div>
+      <!-- Panel único (se rellena según el catálogo activo) -->
+      <div id="panel-catalogo" style="background:white;padding:1rem;border-radius:var(--border-radius);">
+        <!-- Formularios (3) ocultos/visibles según selección -->
+        <form id="formNivel" class="form-row cat-form" data-kind="niveles" style="margin-bottom:.75rem;">
+          <input type="text" class="form-control" placeholder="Clave (ej: preescolar)" id="nivelClave" required>
+          <input type="text" class="form-control" placeholder="Nombre (ej: Preescolar)" id="nivelNombre" required>
+          <label style="display:flex;align-items:center;gap:.4rem;">
+            <input type="checkbox" id="nivelActivo" checked> Activo
+          </label>
+          <button type="submit" class="btn btn-success">Agregar</button>
+        </form>
 
-    <!-- Asuntos -->
-    <div class="card" style="background:white;padding:1rem;border-radius:var(--border-radius);">
-      <h3>Asuntos</h3>
-      <form id="formAsunto" class="form-row" style="margin-bottom: .5rem;">
-        <input type="text" class="form-control" placeholder="Clave (ej: certificacion)" id="asuntoClave" required>
-        <input type="text" class="form-control" placeholder="Nombre (ej: Certificación)" id="asuntoNombre" required>
-        <button type="submit" class="btn btn-success">Agregar</button>
-      </form>
-      <div id="tablaAsuntos"></div>
-    </div>
-  </div>
-</section>
+        <form id="formMunicipio" class="form-row cat-form" data-kind="municipios" style="margin-bottom:.75rem; display:none;">
+          <input type="text" class="form-control" placeholder="Clave (ej: aguascalientes)" id="munClave" required>
+          <input type="text" class="form-control" placeholder="Nombre (ej: Aguascalientes)" id="munNombre" required>
+          <label style="display:flex;align-items:center;gap:.4rem;">
+            <input type="checkbox" id="munActivo" checked> Activo
+          </label>
+          <button type="submit" class="btn btn-success">Agregar</button>
+        </form>
+
+        <form id="formAsunto" class="form-row cat-form" data-kind="asuntos" style="margin-bottom:.75rem; display:none;">
+          <input type="text" class="form-control" placeholder="Clave (ej: certificacion)" id="asuntoClave" required>
+          <input type="text" class="form-control" placeholder="Nombre (ej: Certificación)" id="asuntoNombre" required>
+          <label style="display:flex;align-items:center;gap:.4rem;">
+            <input type="checkbox" id="asuntoActivo" checked> Activo
+          </label>
+          <button type="submit" class="btn btn-success">Agregar</button>
+        </form>
+
+        <!-- Contenedores de tabla (solo se muestra uno a la vez) -->
+        <div id="tablaNiveles" class="cat-table" data-kind="niveles"></div>
+        <div id="tablaMunicipios" class="cat-table" data-kind="municipios" style="display:none;"></div>
+        <div id="tablaAsuntos" class="cat-table" data-kind="asuntos" style="display:none;"></div>
+      </div>
+    </section>
+    <!-- =================== FIN SECCIÓN: CATÁLOGOS (MODIFICADA) =================== -->
+
   </div>
 
   <!-- Tu JS principal -->
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
   <!-- Sistema de pestañas -->
-<script>
-(function(){
-  const root = document.getElementById('tabs-dashboard');
-  if(!root) return;
+  <script>
+  (function(){
+    const root = document.getElementById('tabs-dashboard');
+    if(!root) return;
 
-  const saveMode = (root.dataset.save || 'local').toLowerCase();
-  const def      = (root.dataset.default || 'estadisticas').toLowerCase();
+    const saveMode = (root.dataset.save || 'local').toLowerCase();
+    const def      = (root.dataset.default || 'estadisticas').toLowerCase();
 
-  const tabs  = Array.from(root.querySelectorAll('[role="tab"]'));
-  const panes = tabs.map(t => document.getElementById(t.getAttribute('aria-controls'))).filter(Boolean);
-  const order = tabs.map(t => t.id);
+    const tabs  = Array.from(root.querySelectorAll('[role="tab"]'));
+    const panes = tabs.map(t => document.getElementById(t.getAttribute('aria-controls'))).filter(Boolean);
+    const order = tabs.map(t => t.id);
 
-  tabs.forEach((t, i) => {
-    t.addEventListener('click', () => select(t.id));
-    t.addEventListener('keydown', (ev) => {
-      switch(ev.key){
-        case 'ArrowRight': ev.preventDefault(); selectByIndex(i+1); break;
-        case 'ArrowLeft':  ev.preventDefault(); selectByIndex(i-1); break;
-        case 'Home':       ev.preventDefault(); selectByIndex(0); break;
-        case 'End':        ev.preventDefault(); selectByIndex(order.length-1); break;
-        case 'Enter':
-        case ' ':          ev.preventDefault(); select(t.id); break;
-      }
-    });
-  });
-
-  function selectByIndex(idx){
-    if (idx < 0) idx = order.length - 1;
-    if (idx >= order.length) idx = 0;
-    select(order[idx]);
-  }
-
-  function select(tabId, opts = { focus:true, pushHash:true, persist:true }){
-    const tab = document.getElementById(tabId);
-    if(!tab) return;
-    const panelId = tab.getAttribute('aria-controls');
-    const panel = document.getElementById(panelId);
-    if(!panel) return;
-
-    tabs.forEach(t => t.setAttribute('aria-selected','false'));
-    panes.forEach(p => p.setAttribute('aria-hidden','true'));
-
-    tab.setAttribute('aria-selected','true');
-    panel.setAttribute('aria-hidden','false');
-    if (opts.focus) panel.focus({ preventScroll:false });
-
-    const hash = tab.id.replace(/^tab-/, '');
-    if (saveMode === 'local' && opts.persist) {
-      try { localStorage.setItem('dashboard.activeTab', tabId); } catch(e){}
-    }
-    if (opts.pushHash && hash) {
-      history.replaceState(null, '', '#' + hash);
-    }
-  }
-
-  (function init(){
-    const byHash = (location.hash || '').replace('#','').toLowerCase();
-    if (byHash) {
-      const btn = document.getElementById('tab-' + byHash);
-      if (btn) return select(btn.id, {focus:false, pushHash:true, persist:false});
-    }
-    if (saveMode === 'local') {
-      try {
-        const saved = localStorage.getItem('dashboard.activeTab');
-        if (saved && document.getElementById(saved)) {
-          return select(saved, {focus:false, pushHash:true, persist:false});
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(t.id));
+      t.addEventListener('keydown', (ev) => {
+        switch(ev.key){
+          case 'ArrowRight': ev.preventDefault(); selectByIndex(i+1); break;
+          case 'ArrowLeft':  ev.preventDefault(); selectByIndex(i-1); break;
+          case 'Home':       ev.preventDefault(); selectByIndex(0); break;
+          case 'End':        ev.preventDefault(); selectByIndex(order.length-1); break;
+          case 'Enter':
+          case ' ':          ev.preventDefault(); select(t.id); break;
         }
-      } catch(e){}
-    }
-    select('tab-' + def, {focus:false, pushHash:true, persist:false});
-  })();
+      });
+    });
 
-  window.addEventListener('hashchange', () => {
-    const byHash = (location.hash || '').replace('#','').toLowerCase();
-    const btn = document.getElementById('tab-' + byHash);
-    if (btn) select(btn.id, {focus:false, pushHash:false});
-  });
-})();
-</script>
-  </body>
+    function selectByIndex(idx){
+      if (idx < 0) idx = order.length - 1;
+      if (idx >= order.length) idx = 0;
+      select(order[idx]);
+    }
+
+    function select(tabId, opts = { focus:true, pushHash:true, persist:true }){
+      const tab = document.getElementById(tabId);
+      if(!tab) return;
+      const panelId = tab.getAttribute('aria-controls');
+      const panel = document.getElementById(panelId);
+      if(!panel) return;
+
+      tabs.forEach(t => t.setAttribute('aria-selected','false'));
+      panes.forEach(p => p.setAttribute('aria-hidden','true'));
+
+      tab.setAttribute('aria-selected','true');
+      panel.setAttribute('aria-hidden','false');
+      if (opts.focus) panel.focus({ preventScroll:false });
+
+      const hash = tab.id.replace(/^tab-/, '');
+      if (saveMode === 'local' && opts.persist) {
+        try { localStorage.setItem('dashboard.activeTab', tabId); } catch(e){}
+      }
+      if (opts.pushHash && hash) {
+        history.replaceState(null, '', '#' + hash);
+      }
+    }
+
+    (function init(){
+      const byHash = (location.hash || '').replace('#','').toLowerCase();
+      if (byHash) {
+        const btn = document.getElementById('tab-' + byHash);
+        if (btn) return select(btn.id, {focus:false, pushHash:true, persist:false});
+      }
+      if (saveMode === 'local') {
+        try {
+          const saved = localStorage.getItem('dashboard.activeTab');
+          if (saved && document.getElementById(saved)) {
+            return select(saved, {focus:false, pushHash:true, persist:false});
+          }
+        } catch(e){}
+      }
+      select('tab-' + def, {focus:false, pushHash:true, persist:false});
+    })();
+
+    window.addEventListener('hashchange', () => {
+      const byHash = (location.hash || '').replace('#','').toLowerCase();
+      const btn = document.getElementById('tab-' + byHash);
+      if (btn) select(btn.id, {focus:false, pushHash:false});
+    });
+  })();
+  </script>
+
+  <!-- Conmutador de catálogos (nuevo) -->
+  <script>
+  (function(){
+    const menuButtons = Array.from(document.querySelectorAll('#catalogos .catalog-menu [role="tab"]'));
+    const forms = Array.from(document.querySelectorAll('#catalogos .cat-form'));
+    const tables = Array.from(document.querySelectorAll('#catalogos .cat-table'));
+
+    async function loadCatalog(kind){
+      // Usa tus funciones existentes de dashboard.js:
+      // cargarNiveles / cargarMunicipios / cargarAsuntos
+      try {
+        if (kind === 'niveles' && typeof cargarNiveles === 'function') await cargarNiveles();
+        if (kind === 'municipios' && typeof cargarMunicipios === 'function') await cargarMunicipios();
+        if (kind === 'asuntos' && typeof cargarAsuntos === 'function') await cargarAsuntos();
+      } catch(e) { console.error('Error cargando catálogo', kind, e); }
+    }
+
+    function activate(kind){
+      // Estado de botones
+      menuButtons.forEach(btn => btn.setAttribute('aria-selected', String(btn.dataset.target === kind)));
+      // Mostrar/ocultar forms
+      forms.forEach(f => f.style.display = (f.dataset.kind === kind ? '' : 'none'));
+      // Mostrar/ocultar tablas
+      tables.forEach(t => t.style.display = (t.dataset.kind === kind ? '' : 'none'));
+      // Cargar datos
+      loadCatalog(kind);
+    }
+
+    menuButtons.forEach(btn => {
+      btn.addEventListener('click', () => activate(btn.dataset.target));
+      btn.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); activate(btn.dataset.target); }
+      });
+    });
+
+    // Inicial: Niveles
+    activate('niveles');
+  })();
+  </script>
+</body>
 </html>
