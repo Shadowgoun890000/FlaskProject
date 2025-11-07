@@ -25,6 +25,9 @@ from registro.usuario.viewset.viewset import UsuarioView
 from registro.turno.viewset.viewset import TurnoView
 from registro.usuario.serializer.serializer import usuario_schema
 from registro.turno.serializer.serializer import turno_schema
+from registro.models.catalogo_nivel import CatalogoNivel
+from registro.models.catalogo_municipio import CatalogoMunicipio
+from registro.models.catalogo_asunto import CatalogoAsunto
 
 # Importar sistema de autenticación
 from registro.auth.session_manager import SessionManager, login_required, QRGenerator
@@ -440,6 +443,23 @@ def publico():
     return render_template('formulario.html',
                          is_logged_in=is_logged_in,
                          admin_username=admin_username)
+
+def _public_list(Model):
+    # Solo activos; orden alfabético
+    objs = Model.query.filter_by(activo=True).order_by(Model.nombre.asc()).all()
+    return jsonify([o.to_dict() for o in objs])
+
+@app.route('/api/catalogos/niveles', methods=['GET'])
+def public_niveles():
+    return _public_list(CatalogoNivel)
+
+@app.route('/api/catalogos/municipios', methods=['GET'])
+def public_municipios():
+    return _public_list(CatalogoMunicipio)
+
+@app.route('/api/catalogos/asuntos', methods=['GET'])
+def public_asuntos():
+    return _public_list(CatalogoAsunto)
 
 @app.route('/publico/modificar')
 def modificar_turno_form():
@@ -916,6 +936,95 @@ def api_turno(turno_id):
     elif request.method == 'DELETE':
         return turno_view.delete_turno(turno_id)
 
+
+def _crud_list(Model):
+    objs = Model.query.order_by(Model.nombre.asc()).all()
+    return jsonify([o.to_dict() for o in objs])
+
+def _crud_create(Model, data):
+    obj = Model(clave=data.get('clave','').strip().lower(),
+                nombre=data.get('nombre','').strip(),
+                activo=bool(data.get('activo', True)))
+    db.session.add(obj)
+    db.session.commit()
+    return jsonify(obj.to_dict()), 201
+
+def _crud_update(Model, item_id, data):
+    obj = Model.query.get_or_404(item_id)
+    if 'clave' in data: obj.clave = data['clave'].strip().lower()
+    if 'nombre' in data: obj.nombre = data['nombre'].strip()
+    if 'activo' in data: obj.activo = bool(data['activo'])
+    db.session.commit()
+    return jsonify(obj.to_dict())
+
+def _crud_delete(Model, item_id):
+    obj = Model.query.get_or_404(item_id)
+    db.session.delete(obj)
+    db.session.commit()
+    return jsonify({"success": True})
+
+# --------- NIVELES ---------
+@app.route('/admin/catalogos/niveles', methods=['GET'])
+@login_required
+def list_niveles():
+    return _crud_list(CatalogoNivel)
+
+@app.route('/admin/catalogos/niveles', methods=['POST'])
+@login_required
+def create_nivel():
+    return _crud_create(CatalogoNivel, request.get_json() or {})
+
+@app.route('/admin/catalogos/niveles/<int:item_id>', methods=['PATCH','PUT'])
+@login_required
+def update_nivel(item_id):
+    return _crud_update(CatalogoNivel, item_id, request.get_json() or {})
+
+@app.route('/admin/catalogos/niveles/<int:item_id>', methods=['DELETE'])
+@login_required
+def delete_nivel(item_id):
+    return _crud_delete(CatalogoNivel, item_id)
+
+# --------- MUNICIPIOS ---------
+@app.route('/admin/catalogos/municipios', methods=['GET'])
+@login_required
+def list_municipios():
+    return _crud_list(CatalogoMunicipio)
+
+@app.route('/admin/catalogos/municipios', methods=['POST'])
+@login_required
+def create_municipio():
+    return _crud_create(CatalogoMunicipio, request.get_json() or {})
+
+@app.route('/admin/catalogos/municipios/<int:item_id>', methods=['PATCH','PUT'])
+@login_required
+def update_municipio(item_id):
+    return _crud_update(CatalogoMunicipio, item_id, request.get_json() or {})
+
+@app.route('/admin/catalogos/municipios/<int:item_id>', methods=['DELETE'])
+@login_required
+def delete_municipio(item_id):
+    return _crud_delete(CatalogoMunicipio, item_id)
+
+# --------- ASUNTOS ---------
+@app.route('/admin/catalogos/asuntos', methods=['GET'])
+@login_required
+def list_asuntos():
+    return _crud_list(CatalogoAsunto)
+
+@app.route('/admin/catalogos/asuntos', methods=['POST'])
+@login_required
+def create_asunto():
+    return _crud_create(CatalogoAsunto, request.get_json() or {})
+
+@app.route('/admin/catalogos/asuntos/<int:item_id>', methods=['PATCH','PUT'])
+@login_required
+def update_asunto(item_id):
+    return _crud_update(CatalogoAsunto, item_id, request.get_json() or {})
+
+@app.route('/admin/catalogos/asuntos/<int:item_id>', methods=['DELETE'])
+@login_required
+def delete_asunto(item_id):
+    return _crud_delete(CatalogoAsunto, item_id)
 
 # =============================================================================
 # INICIO DE LA APLICACIÓN

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Turnos - Educación</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <style>
+    <style>
         .session-info {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -17,57 +17,25 @@
             align-items: center;
             flex-wrap: wrap;
         }
-        .session-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        .btn-logout {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        .btn-logout:hover {
-            background: #c0392b;
-        }
-        .btn-dashboard {
-            background: #2ecc71;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        .btn-dashboard:hover {
-            background: #27ae60;
-        }
+        .session-buttons { display: flex; gap: 10px; }
+        .btn-logout { background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .btn-logout:hover { background: #c0392b; }
+        .btn-dashboard { background: #2ecc71; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .btn-dashboard:hover { background: #27ae60; }
     </style>
 </head>
 <body>
     <div class="container">
-          <!-- Información de Sesión -->
         {% if is_logged_in %}
         <div class="session-info">
-            <div>
-                <strong>👤 Sesión activa:</strong> {{ admin_username }}
-            </div>
+            <div><strong>👤 Sesión activa:</strong> {{ admin_username }}</div>
             <div class="session-buttons">
-                <a href="{{ url_for('dashboard') }}" class="btn-dashboard">
-                    📊 Dashboard
-                </a>
-                <a href="{{ url_for('logout') }}" class="btn-logout"
-                   onclick="return confirm('¿Estás seguro de que quieres cerrar sesión?')">
-                    🚪 Cerrar Sesión
-                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn-dashboard">📊 Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn-logout" onclick="return confirm('¿Estás seguro de que quieres cerrar sesión?')">🚪 Cerrar Sesión</a>
             </div>
         </div>
         {% endif %}
+
         <header class="header">
             <h1>🎓 Sistema de Turnos Educativos</h1>
             <p>Genera tu turno para trámites y servicios educativos</p>
@@ -123,46 +91,29 @@
 
                     <h2>Información Académica</h2>
 
+                    <!-- 🔁 SELECTS DINÁMICOS desde catálogos -->
                     <div class="form-group">
                         <label for="nivel">Nivel Educativo *</label>
                         <select id="nivel" name="nivel" class="form-control" required>
-                            <option value="">Selecciona un nivel</option>
-                            <option value="preescolar">Preescolar</option>
-                            <option value="primaria">Primaria</option>
-                            <option value="secundaria">Secundaria</option>
-                            <option value="bachillerato">Bachillerato</option>
-                            <option value="licenciatura">Licenciatura</option>
-                            <option value="posgrado">Posgrado</option>
+                            <option value="">Cargando niveles...</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="municipio">Municipio *</label>
                         <select id="municipio" name="municipio" class="form-control" required>
-                            <option value="">Selecciona un municipio</option>
-                            <option value="aguascalientes">Aguascalientes</option>
-                            <option value="zacatecas">Zacatecas</option>
-                            <option value="jalisco">Jalisco</option>
-                            <option value="guanajuato">Guanajuato</option>
-                            <option value="san-luis-potosi">San Luis Potosí</option>
+                            <option value="">Cargando municipios...</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="asunto">Asunto *</label>
                         <select id="asunto" name="asunto" class="form-control" required>
-                            <option value="">Selecciona un asunto</option>
-                            <option value="inscripcion">Inscripción</option>
-                            <option value="reinscripcion">Reinscripción</option>
-                            <option value="certificacion">Certificación</option>
-                            <option value="tramite-documentos">Trámite de documentos</option>
-                            <option value="informacion">Información general</option>
+                            <option value="">Cargando asuntos...</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">
-                        Generar Turno
-                    </button>
+                    <button type="submit" class="btn btn-primary btn-block">Generar Turno</button>
                 </form>
             </div>
 
@@ -194,11 +145,7 @@
                         <li>Trae identificación oficial</li>
                         <li>Presenta este comprobante</li>
                         <li>Conserva tu número de turno</li>
-                        <li>
-                             <a href="{{ url_for('modificar_turno_form') }}" style="color: #3498db;">
-                                 ✏️ ¿Necesitas modificar tu turno?
-                             </a>
-                        </li>
+                        <li><a href="{{ url_for('modificar_turno_form') }}" style="color: #3498db;">✏️ ¿Necesitas modificar tu turno?</a></li>
                     </ul>
                 </div>
             </div>
@@ -212,12 +159,49 @@
             <h2>✅ Turno Generado Exitosamente</h2>
             <p>Tu turno ha sido registrado en el sistema. Puedes descargar tu comprobante en el panel lateral.</p>
             <p><strong>Recuerda:</strong> Guarda tu número de turno para cualquier consulta.</p>
-            <button onclick="app.closeModal()" class="btn btn-primary btn-block mt-3">
-                Entendido
-            </button>
+            <button onclick="app.closeModal()" class="btn btn-primary btn-block mt-3">Entendido</button>
         </div>
     </div>
 
+    <!-- === Helpers para cargar catálogos === -->
+    <script>
+    async function fillSelect(url, selectId, placeholder) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.disabled = true;
+      sel.innerHTML = `<option value="">${placeholder}</option>`;
+      try {
+        const r = await fetch(url, { credentials: 'same-origin' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const items = await r.json();
+        const activos = (items || []).filter(x => x.activo);
+        if (activos.length === 0) {
+          sel.innerHTML = `<option value="">(Sin opciones)</option>`;
+          return;
+        }
+        sel.innerHTML = `<option value="">${placeholder}</option>`;
+        for (const x of activos) {
+          const opt = document.createElement('option');
+          opt.value = x.clave;        // lo que se envía al backend
+          opt.textContent = x.nombre; // lo que ve el usuario
+          sel.appendChild(opt);
+        }
+      } catch (e) {
+        console.error('Error cargando', selectId, e);
+        sel.innerHTML = `<option value="">Error al cargar</option>`;
+      } finally {
+        sel.disabled = false;
+      }
+    }
+
+   document.addEventListener('DOMContentLoaded', () => {
+  fillSelect('/api/catalogos/niveles', 'nivel', 'Selecciona un nivel');
+  fillSelect('/api/catalogos/municipios', 'municipio', 'Selecciona un municipio');
+  fillSelect('/api/catalogos/asuntos', 'asunto', 'Selecciona un asunto');
+});
+    </script>
+
+    <!-- Tu JS existente (si aplica) -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

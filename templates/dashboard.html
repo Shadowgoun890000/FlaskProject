@@ -61,6 +61,7 @@
         <button class="tabs-btn" role="tab" id="tab-estadisticas" aria-controls="estadisticas" aria-selected="true">📈 Estadísticas</button>
         <button class="tabs-btn" role="tab" id="tab-turnos" aria-controls="turnos" aria-selected="false">📋 Gestión de Turnos</button>
         <button class="tabs-btn" role="tab" id="tab-gestion-codigos" aria-controls="gestion-codigos" aria-selected="false">🔑 Códigos</button>
+          <button class="tabs-btn" role="tab" id="tab-catalogos" aria-controls="catalogos" aria-selected="false">📚 Catálogos</button>
         <button class="tabs-btn" role="tab" id="tab-busqueda" aria-controls="busqueda" aria-selected="false">🔍 Búsqueda</button>
       </div>
     </nav>
@@ -158,6 +159,45 @@
         <div id="searchResults" style="margin-top: 1rem;"></div>
       </div>
     </section>
+
+  <section id="catalogos" class="dashboard-section" role="tabpanel" aria-labelledby="tab-catalogos" aria-hidden="true" tabindex="0">
+  <h2>📚 Catálogos</h2>
+
+  <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;">
+    <!-- Niveles -->
+    <div class="card" style="background:white;padding:1rem;border-radius:var(--border-radius);">
+      <h3>Niveles</h3>
+      <form id="formNivel" class="form-row" style="margin-bottom: .5rem;">
+        <input type="text" class="form-control" placeholder="Clave (ej: preescolar)" id="nivelClave" required>
+        <input type="text" class="form-control" placeholder="Nombre (ej: Preescolar)" id="nivelNombre" required>
+        <button type="submit" class="btn btn-success">Agregar</button>
+      </form>
+      <div id="tablaNiveles"></div>
+    </div>
+
+    <!-- Municipios -->
+    <div class="card" style="background:white;padding:1rem;border-radius:var(--border-radius);">
+      <h3>Municipios</h3>
+      <form id="formMunicipio" class="form-row" style="margin-bottom: .5rem;">
+        <input type="text" class="form-control" placeholder="Clave (ej: aguascalientes)" id="munClave" required>
+        <input type="text" class="form-control" placeholder="Nombre (ej: Aguascalientes)" id="munNombre" required>
+        <button type="submit" class="btn btn-success">Agregar</button>
+      </form>
+      <div id="tablaMunicipios"></div>
+    </div>
+
+    <!-- Asuntos -->
+    <div class="card" style="background:white;padding:1rem;border-radius:var(--border-radius);">
+      <h3>Asuntos</h3>
+      <form id="formAsunto" class="form-row" style="margin-bottom: .5rem;">
+        <input type="text" class="form-control" placeholder="Clave (ej: certificacion)" id="asuntoClave" required>
+        <input type="text" class="form-control" placeholder="Nombre (ej: Certificación)" id="asuntoNombre" required>
+        <button type="submit" class="btn btn-success">Agregar</button>
+      </form>
+      <div id="tablaAsuntos"></div>
+    </div>
+  </div>
+</section>
   </div>
 
   <!-- Tu JS principal -->

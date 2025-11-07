@@ -454,6 +454,143 @@ class DashboardApp {
     }
 }
 
+// Utilidad para tabla simple con editar/eliminar
+function renderTabla(items, onUpdate, onDelete) {
+  const cont = document.createElement('div');
+  const table = document.createElement('table');
+  table.className = 'table';
+  table.style.width = '100%';
+  table.innerHTML = `
+    <thead><tr>
+      <th>ID</th><th>Clave</th><th>Nombre</th><th>Activo</th><th>Acciones</th>
+    </tr></thead>
+    <tbody></tbody>`;
+  const tbody = table.querySelector('tbody');
+
+  items.forEach(it => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.id}</td>
+      <td><input type="text" value="${it.clave}" data-field="clave" class="form-control"></td>
+      <td><input type="text" value="${it.nombre}" data-field="nombre" class="form-control"></td>
+      <td><input type="checkbox" ${it.activo ? 'checked' : ''} data-field="activo"></td>
+      <td>
+        <button class="btn btn-primary btn-sm" data-action="save">Guardar</button>
+        <button class="btn btn-outline btn-sm" data-action="delete">Eliminar</button>
+      </td>`;
+    tr.querySelector('[data-action="save"]').onclick = () => {
+      const clave = tr.querySelector('[data-field="clave"]').value.trim();
+      const nombre = tr.querySelector('[data-field="nombre"]').value.trim();
+      const activo = tr.querySelector('[data-field="activo"]').checked;
+      onUpdate(it.id, {clave, nombre, activo});
+    };
+    tr.querySelector('[data-action="delete"]').onclick = () => onDelete(it.id);
+    tbody.appendChild(tr);
+  });
+
+  cont.appendChild(table);
+  return cont;
+}
+
+// ----- NIVELES -----
+async function cargarNiveles() {
+  const r = await fetch('/admin/catalogos/niveles');
+  const datos = await r.json();
+  const tabla = renderTabla(
+    datos,
+    async (id, payload) => {
+      await fetch(`/admin/catalogos/niveles/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      await cargarNiveles();
+    },
+    async (id) => {
+      await fetch(`/admin/catalogos/niveles/${id}`, { method: 'DELETE' });
+      await cargarNiveles();
+    }
+  );
+  const host = document.getElementById('tablaNiveles');
+  host.innerHTML = '';
+  host.appendChild(tabla);
+}
+
+document.getElementById('formNivel')?.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = {
+    clave: document.getElementById('nivelClave').value,
+    nombre: document.getElementById('nivelNombre').value,
+    activo: true
+  };
+  await fetch('/admin/catalogos/niveles', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  e.target.reset();
+  await cargarNiveles();
+});
+
+// ----- MUNICIPIOS -----
+async function cargarMunicipios() {
+  const r = await fetch('/admin/catalogos/municipios');
+  const datos = await r.json();
+  const tabla = renderTabla(
+    datos,
+    async (id, payload) => {
+      await fetch(`/admin/catalogos/municipios/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      await cargarMunicipios();
+    },
+    async (id) => {
+      await fetch(`/admin/catalogos/municipios/${id}`, { method: 'DELETE' });
+      await cargarMunicipios();
+    }
+  );
+  const host = document.getElementById('tablaMunicipios');
+  host.innerHTML = '';
+  host.appendChild(tabla);
+}
+document.getElementById('formMunicipio')?.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = {
+    clave: document.getElementById('munClave').value,
+    nombre: document.getElementById('munNombre').value,
+    activo: true
+  };
+  await fetch('/admin/catalogos/municipios', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  e.target.reset();
+  await cargarMunicipios();
+});
+
+// ----- ASUNTOS -----
+async function cargarAsuntos() {
+  const r = await fetch('/admin/catalogos/asuntos');
+  const datos = await r.json();
+  const tabla = renderTabla(
+    datos,
+    async (id, payload) => {
+      await fetch(`/admin/catalogos/asuntos/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      await cargarAsuntos();
+    },
+    async (id) => {
+      await fetch(`/admin/catalogos/asuntos/${id}`, { method: 'DELETE' });
+      await cargarAsuntos();
+    }
+  );
+  const host = document.getElementById('tablaAsuntos');
+  host.innerHTML = '';
+  host.appendChild(tabla);
+}
+document.getElementById('formAsunto')?.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const payload = {
+    clave: document.getElementById('asuntoClave').value,
+    nombre: document.getElementById('asuntoNombre').value,
+    activo: true
+  };
+  await fetch('/admin/catalogos/asuntos', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  e.target.reset();
+  await cargarAsuntos();
+});
+
+// Carga cuando se abre la pestaña "Catálogos"
+document.getElementById('tab-catalogos')?.addEventListener('click', async ()=>{
+  await Promise.all([cargarNiveles(), cargarMunicipios(), cargarAsuntos()]);
+});
+
 // Inicializar dashboard
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new DashboardApp();
