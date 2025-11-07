@@ -1,210 +1,247 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de Turnos</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Sistema de Turnos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Bloque mínimo para tabs (usa tus variables existentes) -->
+  <style>
+    .tabs-header[role="tablist"] {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .tabs-btn[role="tab"] {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      padding: 12px 18px;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      font-weight: 600;
+      background: #fff;
+      color: var(--secondary-color);
+      box-shadow: var(--shadow);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .tabs-btn[role="tab"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, .12);
+    }
+    .tabs-btn[aria-selected="true"] {
+      background: var(--secondary-color);
+      color: #fff;
+    }
+    .dashboard-section[aria-hidden="true"] {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h1>📊 Dashboard Administrativo</h1>
-                <p>Bienvenido, {{ admin_username }}</p>
-            </div>
-            <div>
-                <a href="{{ url_for('logout') }}" class="btn btn-warning">🚪 Cerrar Sesión</a>
-            </div>
-        </header>
+  <div class="container">
+    <!-- Header -->
+    <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1>📊 Dashboard Administrativo</h1>
+        <p>Bienvenido, {{ admin_username }}</p>
+      </div>
+      <div>
+        <a href="{{ url_for('logout') }}" class="btn btn-warning">🚪 Cerrar Sesión</a>
+      </div>
+    </header>
 
-        <!-- Menú de Navegación -->
-        <nav class="nav-menu" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 2rem;">
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <a href="#estadisticas" class="btn btn-primary">📈 Estadísticas</a>
-                <a href="#turnos" class="btn btn-primary">📋 Gestión de Turnos</a>
-                <a href="#busqueda" class="btn btn-primary">🔍 Búsqueda</a>
-                <a href="#catalogos" class="btn btn-primary">📚 Catálogos</a>
-            </div>
-        </nav>
+    <!-- Menú Tabs -->
+    <nav class="nav-menu" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 2rem;">
+      <div class="tabs-header" role="tablist" aria-label="Secciones del dashboard" id="tabs-dashboard" data-save="local" data-default="estadisticas">
+        <button class="tabs-btn" role="tab" id="tab-estadisticas" aria-controls="estadisticas" aria-selected="true">📈 Estadísticas</button>
+        <button class="tabs-btn" role="tab" id="tab-turnos" aria-controls="turnos" aria-selected="false">📋 Gestión de Turnos</button>
+        <button class="tabs-btn" role="tab" id="tab-gestion-codigos" aria-controls="gestion-codigos" aria-selected="false">🔑 Códigos</button>
+        <button class="tabs-btn" role="tab" id="tab-busqueda" aria-controls="busqueda" aria-selected="false">🔍 Búsqueda</button>
+      </div>
+    </nav>
 
-        <!-- Estadísticas -->
-        <section id="estadisticas" class="dashboard-section">
-            <h2>📈 Estadísticas de Turnos</h2>
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Total Turnos</h3>
-                    <div class="stat-number" id="total-turnos" style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{{ stats.total_turnos }}</div>
-                </div>
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Pendientes</h3>
-                    <div class="stat-number" id="pendientes" style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">{{ stats.pendientes }}</div>
-                </div>
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Resueltos</h3>
-                    <div class="stat-number" id="resueltos" style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ stats.resueltos }}</div>
-                </div>
-                <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
-                    <h3>Por Municipio</h3>
-                    <div class="stat-number" id="total-municipios" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ stats.total_municipios }}</div>
-                </div>
-            </div>
-
-            <!-- Gráficas -->
-            <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-                    <h4>Estatus de Turnos</h4>
-                    <canvas id="estatusChart"></canvas>
-                </div>
-                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-                    <h4>Turnos por Municipio</h4>
-                    <canvas id="municipiosChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gestión de Turnos -->
-        <section id="turnos" class="dashboard-section" style="margin-top: 3rem;">
-            <h2>📋 Gestión de Turnos</h2>
-            <div class="filters" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <select id="filterEstado" class="form-control">
-                        <option value="">Todos los estados</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="atendido">Atendido</option>
-                        <option value="resuelto">Resuelto</option>
-                        <option value="cancelado">Cancelado</option>
-                    </select>
-                    <select id="filterMunicipio" class="form-control">
-                        <option value="">Todos los municipios</option>
-                        {% for municipio in municipios %}
-                        <option value="{{ municipio }}">{{ municipio }}</option>
-                        {% endfor %}
-                    </select>
-                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
-                </div>
-            </div>
-
-            <div id="turnosList" class="turnos-list">
-                <!-- Los turnos se cargarán aquí via JavaScript -->
-            </div>
-        </section>
-
-    <section id="gestion-codigos" class="dashboard-section" style="margin-top: 3rem;">
-    <h2>🔑 Gestión de Códigos de Registro</h2>
-    <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-        <div class="form-row">
-            <div class="form-group">
-                <button id="btnGenerarCodigo" class="btn btn-success">
-                    🎫 Generar Código de Registro
-                </button>
-            </div>
-            <div class="form-group">
-                <button id="btnVerCodigos" class="btn btn-info">
-                    📋 Ver Códigos Activos
-                </button>
-            </div>
+    <!-- Sección: Estadísticas -->
+    <section id="estadisticas" class="dashboard-section" role="tabpanel" aria-labelledby="tab-estadisticas" aria-hidden="false" tabindex="0">
+      <h2>📈 Estadísticas de Turnos</h2>
+      <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+          <h3>Total Turnos</h3>
+          <div class="stat-number" id="total-turnos" style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{{ stats.total_turnos }}</div>
         </div>
+        <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+          <h3>Pendientes</h3>
+          <div class="stat-number" id="pendientes" style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">{{ stats.pendientes }}</div>
+        </div>
+        <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+          <h3>Resueltos</h3>
+          <div class="stat-number" id="resueltos" style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ stats.resueltos }}</div>
+        </div>
+        <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); text-align: center;">
+          <h3>Por Municipio</h3>
+          <div class="stat-number" id="total-municipios" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ stats.total_municipios }}</div>
+        </div>
+      </div>
 
+      <!-- Gráficas -->
+      <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+          <h4>Estatus de Turnos</h4>
+          <canvas id="estatusChart"></canvas>
+        </div>
+        <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+          <h4>Turnos por Municipio</h4>
+          <canvas id="municipiosChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Gestión de Turnos -->
+    <section id="turnos" class="dashboard-section" role="tabpanel" aria-labelledby="tab-turnos" aria-hidden="true" tabindex="0">
+      <h2>📋 Gestión de Turnos</h2>
+      <div class="filters" style="background: white; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <select id="filterEstado" class="form-control">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="atendido">Atendido</option>
+            <option value="resuelto">Resuelto</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <select id="filterMunicipio" class="form-control">
+            <option value="">Todos los municipios</option>
+            {% for municipio in municipios %}
+            <option value="{{ municipio }}">{{ municipio }}</option>
+            {% endfor %}
+          </select>
+          <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+        </div>
+      </div>
+      <div id="turnosList" class="turnos-list"></div>
+    </section>
+
+    <!-- Sección: Gestión de Códigos -->
+    <section id="gestion-codigos" class="dashboard-section" role="tabpanel" aria-labelledby="tab-gestion-codigos" aria-hidden="true" tabindex="0">
+      <h2>🔑 Gestión de Códigos de Registro</h2>
+      <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+        <div class="form-row">
+          <div class="form-group">
+            <button id="btnGenerarCodigo" class="btn btn-success">🎫 Generar Código de Registro</button>
+          </div>
+          <div class="form-group">
+            <button id="btnVerCodigos" class="btn btn-primary">📋 Ver Códigos Activos</button>
+          </div>
+        </div>
         <div id="codigosResult" style="margin-top: 1rem;"></div>
-    </div>
-</section>
+      </div>
+    </section>
 
-        <!-- Búsqueda -->
-        <section id="busqueda" class="dashboard-section" style="margin-top: 3rem;">
-            <h2>🔍 Búsqueda Avanzada</h2>
-            <div class="search-forms" style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="searchCURP">Buscar por CURP</label>
-                        <input type="text" id="searchCURP" class="form-control" placeholder="Ingresa la CURP">
-                    </div>
-                    <div class="form-group">
-                        <label for="searchNombre">Buscar por Nombre</label>
-                        <input type="text" id="searchNombre" class="form-control" placeholder="Ingresa el nombre">
-                    </div>
-                </div>
-                <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+    <!-- Sección: Búsqueda -->
+    <section id="busqueda" class="dashboard-section" role="tabpanel" aria-labelledby="tab-busqueda" aria-hidden="true" tabindex="0">
+      <h2>🔍 Búsqueda Avanzada</h2>
+      <div class="search-forms" style="background: white; padding: 1.5rem; border-radius: var(--border-radius);">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="searchCURP">Buscar por CURP</label>
+            <input type="text" id="searchCURP" class="form-control" placeholder="Ingresa la CURP">
+          </div>
+          <div class="form-group">
+            <label for="searchNombre">Buscar por Nombre</label>
+            <input type="text" id="searchNombre" class="form-control" placeholder="Ingresa el nombre">
+          </div>
+        </div>
+        <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+        <div id="searchResults" style="margin-top: 1rem;"></div>
+      </div>
+    </section>
+  </div>
 
-                <div id="searchResults" style="margin-top: 1rem;">
-                    <!-- Resultados de búsqueda -->
-                </div>
-            </div>
-        </section>
-    </div>
+  <!-- Tu JS principal -->
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}">
-        // Gestión de códigos de registro
-document.getElementById('btnGenerarCodigo').addEventListener('click', generarCodigoRegistro);
-document.getElementById('btnVerCodigos').addEventListener('click', verCodigosActivos);
+  <!-- Sistema de pestañas -->
+<script>
+(function(){
+  const root = document.getElementById('tabs-dashboard');
+  if(!root) return;
 
-async function generarCodigoRegistro() {
-    try {
-        const response = await fetch('/admin/generate-code');
-        const result = await response.json();
+  const saveMode = (root.dataset.save || 'local').toLowerCase();
+  const def      = (root.dataset.default || 'estadisticas').toLowerCase();
 
-        if (result.success) {
-            document.getElementById('codigosResult').innerHTML = `
-                <div class="success-message">
-                    <strong>✅ ${result.message}</strong><br>
-                    <code style="font-size: 1.2rem; background: #f8f9fa; padding: 10px; display: block; margin: 10px 0;">
-                        ${result.code}
-                    </code>
-                    <p>Comparte este código con quien necesite registrarse. Válido por 24 horas.</p>
-                </div>
-            `;
-        } else {
-            document.getElementById('codigosResult').innerHTML = `
-                <div class="error-message">❌ Error: ${result.error}</div>
-            `;
-        }
-    } catch (error) {
-        document.getElementById('codigosResult').innerHTML = `
-            <div class="error-message">❌ Error de conexión</div>
-        `;
+  const tabs  = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panes = tabs.map(t => document.getElementById(t.getAttribute('aria-controls'))).filter(Boolean);
+  const order = tabs.map(t => t.id);
+
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t.id));
+    t.addEventListener('keydown', (ev) => {
+      switch(ev.key){
+        case 'ArrowRight': ev.preventDefault(); selectByIndex(i+1); break;
+        case 'ArrowLeft':  ev.preventDefault(); selectByIndex(i-1); break;
+        case 'Home':       ev.preventDefault(); selectByIndex(0); break;
+        case 'End':        ev.preventDefault(); selectByIndex(order.length-1); break;
+        case 'Enter':
+        case ' ':          ev.preventDefault(); select(t.id); break;
+      }
+    });
+  });
+
+  function selectByIndex(idx){
+    if (idx < 0) idx = order.length - 1;
+    if (idx >= order.length) idx = 0;
+    select(order[idx]);
+  }
+
+  function select(tabId, opts = { focus:true, pushHash:true, persist:true }){
+    const tab = document.getElementById(tabId);
+    if(!tab) return;
+    const panelId = tab.getAttribute('aria-controls');
+    const panel = document.getElementById(panelId);
+    if(!panel) return;
+
+    tabs.forEach(t => t.setAttribute('aria-selected','false'));
+    panes.forEach(p => p.setAttribute('aria-hidden','true'));
+
+    tab.setAttribute('aria-selected','true');
+    panel.setAttribute('aria-hidden','false');
+    if (opts.focus) panel.focus({ preventScroll:false });
+
+    const hash = tab.id.replace(/^tab-/, '');
+    if (saveMode === 'local' && opts.persist) {
+      try { localStorage.setItem('dashboard.activeTab', tabId); } catch(e){}
     }
-}
-
-async function verCodigosActivos() {
-    try {
-        const response = await fetch('/admin/active-codes');
-        const result = await response.json();
-
-        if (result.success) {
-            if (result.active_codes === 0) {
-                document.getElementById('codigosResult').innerHTML = `
-                    <div class="info-message">No hay códigos activos</div>
-                `;
-            } else {
-                let html = `<div class="success-message"><strong>📋 Códigos Activos: ${result.active_codes}</strong><br>`;
-
-                for (const [code, data] of Object.entries(result.codes)) {
-                    const expires = new Date(data.expires_at).toLocaleString();
-                    html += `
-                        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                            <strong>Código:</strong> <code>${code}</code><br>
-                            <strong>Expira:</strong> ${expires}<br>
-                            <strong>Usos restantes:</strong> ${data.max_uses}
-                        </div>
-                    `;
-                }
-
-                html += `</div>`;
-                document.getElementById('codigosResult').innerHTML = html;
-            }
-        } else {
-            document.getElementById('codigosResult').innerHTML = `
-                <div class="error-message">❌ Error: ${result.error}</div>
-            `;
-        }
-    } catch (error) {
-        document.getElementById('codigosResult').innerHTML = `
-            <div class="error-message">❌ Error de conexión</div>
-        `;
+    if (opts.pushHash && hash) {
+      history.replaceState(null, '', '#' + hash);
     }
-}
-    </script>
-</body>
+  }
+
+  (function init(){
+    const byHash = (location.hash || '').replace('#','').toLowerCase();
+    if (byHash) {
+      const btn = document.getElementById('tab-' + byHash);
+      if (btn) return select(btn.id, {focus:false, pushHash:true, persist:false});
+    }
+    if (saveMode === 'local') {
+      try {
+        const saved = localStorage.getItem('dashboard.activeTab');
+        if (saved && document.getElementById(saved)) {
+          return select(saved, {focus:false, pushHash:true, persist:false});
+        }
+      } catch(e){}
+    }
+    select('tab-' + def, {focus:false, pushHash:true, persist:false});
+  })();
+
+  window.addEventListener('hashchange', () => {
+    const byHash = (location.hash || '').replace('#','').toLowerCase();
+    const btn = document.getElementById('tab-' + byHash);
+    if (btn) select(btn.id, {focus:false, pushHash:false});
+  });
+})();
+</script>
+  </body>
 </html>

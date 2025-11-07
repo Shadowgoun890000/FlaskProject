@@ -42,6 +42,21 @@
             padding-top: 1rem;
             border-top: 1px solid #eee;
         }
+        .admin-register {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        .register-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +106,17 @@
 
                 <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
             </form>
+
+            <!-- Sección de registro de administradores -->
+            <div class="admin-register">
+                <div class="register-info">
+                    <strong>📝 ¿Eres nuevo administrador?</strong><br>
+                    Regístrate con un código de invitación
+                </div>
+                <a href="{{ url_for('register_admin') }}" class="btn btn-success btn-block">
+                    👤 Registrar Nuevo Administrador
+                </a>
+            </div>
 
             <div class="public-access">
                 <p>¿Eres usuario público?</p>

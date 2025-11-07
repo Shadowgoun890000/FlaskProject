@@ -53,7 +53,7 @@ def check_authentication():
     # Rutas que NO requieren autenticación
     public_routes = [
         'login', 'logout', 'publico', 'generar_turno',
-        'descargar_pdf', 'static', 'index'
+        'descargar_pdf', 'static', 'index', 'register_admin'
     ]
 
     # Si la ruta actual no es pública y el usuario no está logueado
@@ -313,8 +313,15 @@ def register_admin():
             confirm_password = data.get('confirm_password', '')
             nombre_completo = data.get('nombre_completo', '').strip()
 
+            print(f"🔍 DEBUG: Código recibido: {registration_code}")
+            print(f"🔍 DEBUG: Usuario: {username}")
+            print(f"🔍 DEBUG: Email: {email}")
+
             # Validar código de registro
             is_valid, code_message = registration_manager.validate_registration_code(registration_code)
+            print(f"🔍 DEBUG: Validación código: {is_valid} - {code_message}")
+            print(f"🔍 DEBUG: Códigos activos: {registration_manager.get_active_codes()}")
+
             if not is_valid:
                 flash(f'Error en código de registro: {code_message}', 'error')
                 return render_template('register.html')
@@ -355,19 +362,27 @@ def register_admin():
             nuevo_admin.set_password(password)
 
             db.session.add(nuevo_admin)
+            print(f"🔍 DEBUG: Administrador creado - {username}")
 
             # Marcar código como utilizado
             registration_manager.mark_code_used(registration_code)
+            print(f"🔍 DEBUG: Código marcado como usado: {registration_code}")
 
             db.session.commit()
+            print("🔍 DEBUG: Commit realizado en la base de datos")
 
             flash('✅ Cuenta de administrador creada exitosamente. Ahora puedes iniciar sesión.', 'success')
             return redirect(url_for('login'))
 
         except ValueError as e:
+            print(f"🔍 DEBUG: ValueError: {str(e)}")
             flash(f'Error: {str(e)}', 'error')
         except Exception as e:
             db.session.rollback()
+            print(f"🔍 DEBUG: Exception: {str(e)}")
+            print(f"🔍 DEBUG: Tipo de excepción: {type(e)}")
+            import traceback
+            print(f"🔍 DEBUG: Traceback: {traceback.format_exc()}")
             flash(f'Error al crear la cuenta: {str(e)}', 'error')
 
     return render_template('register.html')
