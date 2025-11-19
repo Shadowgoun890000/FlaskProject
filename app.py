@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file, flash, re
 from flask_migrate import Migrate
 import random
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from fpdf import FPDF
 import tempfile
 import re
@@ -138,15 +138,23 @@ def obtener_siguiente_turno(municipio):
         secuencia = SecuenciaTurno.query.filter_by(municipio=municipio).first()
 
         if not secuencia:
+            # Primera vez: crear con número 1 y devolver 0001
             secuencia = SecuenciaTurno(municipio=municipio, siguiente_numero=1)
             db.session.add(secuencia)
-            db.session.flush()  # Para obtener el ID sin commit
+            db.session.flush()
+
+            # Usar el número 1 para el primer turno
+            numero_actual = 1
+            # Preparar el siguiente número para el próximo turno
+            secuencia.siguiente_numero = 2
         else:
+            # Usar el número actual y preparar el siguiente
+            numero_actual = secuencia.siguiente_numero
             secuencia.siguiente_numero += 1
             secuencia.fecha_actualizacion = datetime.utcnow()
 
         # Formatear número de turno: MUNICIPIO-0001
-        numero_turno = f"{municipio.upper()}-{secuencia.siguiente_numero:04d}"
+        numero_turno = f"{municipio.upper()}-{numero_actual:04d}"
 
         return numero_turno
 
@@ -155,7 +163,6 @@ def obtener_siguiente_turno(municipio):
         print(f"Error en secuencia de turno: {e}")
         # Fallback: generar número aleatorio
         return f"{municipio.upper()}-{random.randint(1000, 9999)}"
-
 
 def validar_datos(datos):
     errores = {}

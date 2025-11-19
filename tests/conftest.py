@@ -1,36 +1,71 @@
 import pytest
 import os
 import sys
+import tempfile
 from unittest.mock import Mock, patch
 
 # Agregar el directorio raíz al path para los imports
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
 
 @pytest.fixture(scope='function')
 def app():
-    """Configuración de la aplicación para pruebas - VERSIÓN SIMPLIFICADA"""
-    # Mockear todas las dependencias de base de datos antes de importar
-    with patch('registro.models.database.db') as mock_db:
-        with patch('registro.models.database.init_db'):
-            with patch('app.registration_manager'):
-                with patch('app.session_manager'):
-                    # Mock para evitar problemas con SQLAlchemy en los serializers
-                    mock_db.session = Mock()
+    """Configuración de la aplicación para pruebas - VERSIÓN CORREGIDA"""
+    # Configurar una base de datos temporal para pruebas
+    db_fd, db_path = tempfile.mkstemp()
 
-                    # Ahora importar la aplicación
-                    from app import app as flask_app
+    # Importar y configurar la aplicación real desde app.py
+    import app as main_app
 
-                    # Configuración de testing
-                    flask_app.config.update({
-                        'TESTING': True,
-                        'SECRET_KEY': 'test-secret-key',
-                        'WTF_CSRF_ENABLED': False
-                    })
+    # Crear una copia de la aplicación con configuración de testing
+    from flask import Flask
+    from registro.models.database import db
 
-                    yield flask_app
+    # Crear una nueva aplicación Flask para testing
+    flask_app = Flask(__name__,
+                      template_folder='../templates',  # ← CORRECCIÓN IMPORTANTE
+                      static_folder='../static'
+                      )
 
+    # Configuración de testing con base de datos SQLite temporal
+    flask_app.config.update({
+        'TESTING': True,
+        'SECRET_KEY': 'test-secret-key',
+        'WTF_CSRF_ENABLED': False,
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'TEMPLATES_AUTO_RELOAD': True
+    })
+
+    # Inicializar la base de datos
+    db.init_app(flask_app)
+
+    # IMPORTANTE: Registrar las rutas copiando el sistema de rutas de la app principal
+    # Esto evita problemas de importación circular
+    with main_app.app.app_context():
+        for rule in main_app.app.url_map.iter_rules():
+            if rule.endpoint != 'static':
+                view_func = main_app.app.view_functions[rule.endpoint]
+                flask_app.add_url_rule(
+                    rule.rule,
+                    endpoint=rule.endpoint,
+                    view_func=view_func,
+                    methods=rule.methods
+                )
+
+    # Crear tablas en contexto de aplicación
+    with flask_app.app_context():
+        db.create_all()
+
+        yield flask_app
+
+        # Limpieza
+        db.session.remove()
+        db.drop_all()
+
+    os.close(db_fd)
+    os.unlink(db_path)
 
 @pytest.fixture(scope='function')
 def client(app):
@@ -38,22 +73,7 @@ def client(app):
     return app.test_client()
 
 
-@pytest.fixture
-def mock_db():
-    """Mock de la base de datos para tests que lo necesiten"""
-    with patch('registro.models.database.db') as mock:
-        mock.session = Mock()
-        yield mock
-
-
-@pytest.fixture
-def mock_session():
-    """Mock de sesión de base de datos"""
-    with patch('registro.models.database.db.session') as mock:
-        yield mock
-
-
-# Los fixtures de datos de ejemplo se mantienen igual
+# Fixtures de datos de ejemplo (mantener igual)
 @pytest.fixture
 def sample_usuario_data():
     return {

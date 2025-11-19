@@ -8,13 +8,12 @@ class TestAdminRoutes:
     def test_dashboard_requires_login(self, client):
         """Test: Dashboard requiere autenticación - CORREGIDO"""
         response = client.get('/admin/dashboard', follow_redirects=False)
-        # Debería redirigir al login (302) o dar no autorizado (401)
+        # Puede ser 302 (redirección) o 401 (no autorizado) dependiendo de la implementación
         assert response.status_code in [302, 401]
 
     def test_admin_turnos_api_requires_login(self, client):
         """Test: API de turnos requiere autenticación - CORREGIDO"""
         response = client.get('/api/admin/turnos', follow_redirects=False)
-        # Puede ser 401 (no autorizado) o 302 (redirección)
         assert response.status_code in [401, 302]
 
     def test_buscar_turno_publico(self, client):

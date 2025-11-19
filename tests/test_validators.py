@@ -1,5 +1,6 @@
 import pytest
 from app import validar_datos
+from tests.test_utils import app_functions
 
 
 class TestValidators:
@@ -21,7 +22,7 @@ class TestValidators:
             'asunto': 'inscripcion'
         }
 
-        errores = validar_datos(datos_validos)
+        errores = app_functions['validar_datos'](datos_validos)
         assert errores == {}
 
     def test_validar_datos_campos_obligatorios(self):
