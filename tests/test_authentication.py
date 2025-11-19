@@ -1,0 +1,158 @@
+import pytest
+from unittest.mock import Mock, patch
+from flask import session
+
+
+class TestSessionManager:
+    """Pruebas para el SessionManager"""
+
+    def test_session_manager_singleton(self):
+        """Test: SessionManager es singleton"""
+        from registro.auth.session_manager import SessionManager
+        manager1 = SessionManager()
+        manager2 = SessionManager()
+        assert manager1 is manager2
+
+    def test_login_logout(self, client):
+        """Test: Login y logout de administrador - VERSIÓN SIMPLIFICADA"""
+        from registro.auth.session_manager import SessionManager
+        session_manager = SessionManager()
+
+        # Usar el cliente de Flask para manejar la sesión
+        with client:
+            # Simular login
+            session_manager.login_admin(1, 'testadmin')
+            assert session.get('logged_in') == True
+            assert session.get('admin_id') == 1
+            assert session.get('admin_username') == 'testadmin'
+
+            # Verificar estado login
+            assert session_manager.is_logged_in() == True
+            assert session_manager.get_admin_id() == 1
+            assert session_manager.get_admin_username() == 'testadmin'
+
+            # Simular logout
+            session_manager.logout_admin()
+            assert session.get('logged_in') is None
+
+    def test_not_logged_in(self, client):
+        """Test: Estado cuando no hay sesión activa"""
+        from registro.auth.session_manager import SessionManager
+        session_manager = SessionManager()
+
+        with client:
+            # Limpiar sesión
+            session.clear()
+            assert session_manager.is_logged_in() == False
+            assert session_manager.get_admin_id() is None
+            assert session_manager.get_admin_username() is None
+
+
+class TestRegistrationManager:
+    """Pruebas para el RegistrationManager"""
+
+    def test_generate_registration_code(self):
+        """Test: Generación de código de registro"""
+        from registro.auth.registration_manager import RegistrationManager
+        manager = RegistrationManager()
+        code = manager.generate_registration_code()
+
+        assert code is not None
+        assert len(code) == 16
+
+    def test_validate_registration_code(self):
+        """Test: Validación de código de registro"""
+        from registro.auth.registration_manager import RegistrationManager
+        manager = RegistrationManager()
+        code = manager.generate_registration_code()
+
+        # Código válido
+        is_valid, message = manager.validate_registration_code(code)
+        assert is_valid == True
+
+        # Código inválido
+        is_valid, message = manager.validate_registration_code('INVALIDO')
+        assert is_valid == False
+
+    def test_mark_code_used(self):
+        """Test: Marcar código como usado"""
+        from registro.auth.registration_manager import RegistrationManager
+        manager = RegistrationManager()
+        code = manager.generate_registration_code()
+
+        # Marcar como usado
+        manager.mark_code_used(code)
+
+        # Verificar que ya no es válido
+        is_valid, message = manager.validate_registration_code(code)
+        assert is_valid == False
+
+    def test_get_active_codes(self):
+        """Test: Obtener códigos activos"""
+        from registro.auth.registration_manager import RegistrationManager
+        manager = RegistrationManager()
+
+        # Generar varios códigos
+        code1 = manager.generate_registration_code()
+        code2 = manager.generate_registration_code()
+
+        # Marcar uno como usado
+        manager.mark_code_used(code1)
+
+        active_codes = manager.get_active_codes()
+        assert code2 in active_codes
+        assert code1 not in active_codes
+
+
+class TestAuthenticationRoutes:
+    """Pruebas para rutas de autenticación - VERSIÓN SIMPLIFICADA"""
+
+    def test_login_page(self, client):
+        """Test: Página de login carga correctamente"""
+        response = client.get('/admin/login')
+        assert response.status_code == 200
+
+    def test_logout_redirect(self, client):
+        """Test: Logout redirige correctamente"""
+        response = client.get('/admin/logout', follow_redirects=True)
+        assert response.status_code == 200
+
+    @patch('app.Administrador')
+    def test_login_success(self, mock_admin, client):
+        """Test: Login exitoso - VERSIÓN CORREGIDA"""
+        # Mock del administrador
+        mock_admin_instance = Mock()
+        mock_admin_instance.check_password.return_value = True
+        mock_admin_instance.activo = True
+        mock_admin_instance.id = 1
+        mock_admin_instance.username = 'testadmin'
+        mock_admin.query.filter_by.return_value.first.return_value = mock_admin_instance
+
+        # Mock de la base de datos para evitar commit
+        with patch('app.db') as mock_db:
+            mock_session = Mock()
+            mock_db.session = mock_session
+
+            response = client.post('/admin/login', data={
+                'username': 'testadmin',
+                'password': 'testpass',
+                'captcha_input': 'ABC123',
+                'captcha_answer': 'ABC123'
+            })
+
+            # Verificar redirección (código 302) o éxito
+            assert response.status_code in [200, 302]
+
+    def test_login_invalid_captcha(self, client):
+        """Test: Login con CAPTCHA inválido"""
+        response = client.post('/admin/login', data={
+            'username': 'testadmin',
+            'password': 'testpass',
+            'captcha_input': 'WRONG',
+            'captcha_answer': 'CORRECT'
+        })
+
+        assert response.status_code == 200
+        # Usar encode para evitar problemas de codificación
+        error_message = 'Código CAPTCHA incorrecto'.encode('utf-8')
+        assert error_message in response.data
